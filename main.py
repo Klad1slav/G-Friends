@@ -12,7 +12,7 @@ def start(message):
     cur = conn.cursor()
 
     cur.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, name TEXT, age INTEGER, gender TEXT, AboutME Text )')
-   # cur.execute('CREATE TABLE IF NOT EXISTS users_preference (id int auto_increment primary key,gender_preference TEXT, age_min INTEGER, age_max INTEGER, FOREIGN KEY (id) REFERENCES users (id)')
+   #cur.execute('CREATE TABLE IF NOT EXISTS users_preference (id int auto_increment primary key,gender_preference TEXT, age_min INTEGER, age_max INTEGER, FOREIGN KEY (id) REFERENCES users (id)')
     conn.commit()
     cur.close()
     conn.close()
@@ -71,3 +71,4 @@ def get_photo(message):
 
 
 bot.polling(none_stop=True)
+print("La")
