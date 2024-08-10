@@ -71,4 +71,4 @@ def get_photo(message):
 
 
 bot.polling(none_stop=True)
-print("La")
+
