@@ -62,8 +62,15 @@ def user_AboutMe(message):
     bot.register_next_step_handler(message, user_FinReg)
 
 def user_FinReg(message):
+   # with sq.connect('G!Friends.db', check_same_thread=False) as con:
+       # cur = con.cursor()
 
+      #  cur.execute('SELECT * FROM users')
+       # rows = cur.fetchall()
 
+      #  for row in rows:
+        #    print(row)
+        bot.send_message(message.chat.id, name + ', ' + age + ', ' + AboutMe)
         bot.send_message(message.chat.id, 'Все верно?')
         bot.register_next_step_handler(message, menu)
 
