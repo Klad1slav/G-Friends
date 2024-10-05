@@ -1,3 +1,4 @@
+import img as img
 import telebot
 import sqlite3 as sq
 from telebot import types
@@ -6,6 +7,7 @@ bot = telebot.TeleBot('7155989263:AAFcqabkraoHUo7DnPQsi51Fh0kBPXk6Vrg')
 name = None
 age = None
 gender = None
+city = None
 AboutMe = None
 
 
@@ -13,7 +15,8 @@ AboutMe = None
 def start(message):
     with sq.connect('G!Friends.db', check_same_thread=False) as con:
      cur = con.cursor()
-    cur.execute('CREATE TABLE IF NOT EXISTS users(id int auto_increment primary key, name, age, gender, AboutMe )')
+
+    cur.execute('CREATE TABLE IF NOT EXISTS users(id INTEGER primary key, name TEXT, age INTEGER, gender INTEGER, city TEXT, foto BLOB, AboutMe TEXT )')
 
     con.commit()
 
@@ -41,8 +44,23 @@ def user_gender(message):
     global gender
     gender = message.text.strip()
 
+    bot.send_message(message.chat.id, 'В каком городе вы хотите искать?')
+    bot.register_next_step_handler(message, user_city)
+
+def user_city(message):
+     global city
+     city = message.text.strip()
+
+     bot.send_message(foto.chat.id, 'Отправьте ваше фото')
+     bot.register_next_step_handler(message, user_foto)
+
+def user_foto(message):
+    global foto
+    foto = message.text.strip()
+
     bot.send_message(message.chat.id, 'Расскажите немного про себя')
     bot.register_next_step_handler(message, user_AboutMe)
+
 
 def user_AboutMe(message):
     global AboutMe
@@ -54,7 +72,7 @@ def user_AboutMe(message):
     with sq.connect('G!Friends.db', check_same_thread=False) as con:
         cur = con.cursor()
 
-        cur.execute("INSERT INTO users (name, age, gender, AboutMe ) VALUES ('%s','%s','%s','%s')" % (name, age, gender, AboutMe))
+        cur.execute("INSERT INTO users (name, age, gender, city, foto, AboutMe ) VALUES ('%s','%s','%s','%s','%s','%s')" % (name, age, gender, city, foto, AboutMe))
         con.commit()
       #  cur.close()
        # con.close()
@@ -70,7 +88,7 @@ def user_FinReg(message):
 
       #  for row in rows:
         #    print(row)
-        bot.send_message(message.chat.id, name + ', ' + age + ', ' + AboutMe)
+        bot.send_message(message.chat.id, name + ', ' + age + ', '+ city + ', ' + AboutMe)
         bot.send_message(message.chat.id, 'Все верно?')
         bot.register_next_step_handler(message, menu)
 
