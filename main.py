@@ -80,31 +80,16 @@ def user_FinReg(message):
 
         bot.send_message(message.chat.id, name + ', ' + age + ', '+ city + ', ' + AboutMe)
         bot.send_message(message.chat.id, 'Все верно?')
-
-
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton('1')
         btn2 = types.KeyboardButton('2')
         markup.add(btn1, btn2)
-        bot.send_message(message.chat.id, text=
-        '''
-        1.ДА
-        2.НЕТ
-        ''', reply_markup=markup)
-
-        if (message.text == "1"):
-            with sq.connect('G!Friends.db', check_same_thread=False) as con:
-                cur = con.cursor()
-
-                cur.execute(
-                    "INSERT INTO users (name, age, gender, city, foto, AboutMe ) VALUES ('%s','%s','%s','%s','%s','%s')" % (name, age, gender, city, foto, AboutMe))
-                con.commit()
-                menuFirst(message)
-
-        elif (message.text == "2"):
-            start(message)
-
-
+        bot.send_message(message.chat.id,
+                         '''
+                         1.ДА
+                         2.НЕТ
+                         ''', reply_markup=markup)
+        bot.register_next_step_handler(message, FReg)
 
 
 @bot.message_handler(commands=['menu'])
@@ -116,27 +101,53 @@ def menuFirst(message):
     btn3 = types.KeyboardButton('3')
     btn4 = types.KeyboardButton('4')
     markup.add(btn1, btn2, btn3, btn4)
-    bot.send_message(message.chat.id, text =
+    bot.send_message(message.chat.id,
     '''
     1.Смотреть анкеты.
     2.Заполнить анкету заново.
     3.Изменить фото/видео.
     4.Изменить текст анкеты.
-        ''',reply_markup=markup )
-
-#@bot.message_handler(commands=['user_FinReg_text'])
-#def FinRegText(message):
-
+        ''',reply_markup=markup)
+    bot.register_next_step_handler(message, menuSec)
 
 
 @bot.message_handler(content_types=['menuSec_text'])
 def menuSec(message):
-   # if (menuSec.message.text == "1"):
-     #   bot.register_next_step_handler(search, commands = ['search'])
-   # elif (menuSec.message.text == "2"):
-      #  bot.register_next_step_handler(message, start)
+    text = message.text
 
-        bot.send_message(message.chat.id, text="Задай мне вопрос", )
+    if (text == "1"):
+        search(message)
+    elif (text == "2"):
+        bot.send_message(message.chat.id, 'Давай попробуем заново')
+        start(message)
+    elif (text == "3"):
+        bot.register_next_step_handler(message, start)
+    else:
+        bot.send_message(message.chat.id, 'Нет такой функции')
+
+
+@bot.message_handler(content_types=['FReg'])
+def FReg(message):
+
+    text = message.text
+
+    if (text == "1"):
+        with sq.connect('G!Friends.db', check_same_thread=False) as con:
+            cur = con.cursor()
+
+            cur.execute(
+                "INSERT INTO users (name, age, gender, city, foto, AboutMe ) VALUES ('%s','%s','%s','%s','%s','%s')" % (
+                name, age, gender, city, foto, AboutMe))
+            con.commit()
+            menuFirst(message)
+
+    elif (text == "2"):
+        bot.send_message(message.chat.id, 'Давай попробуем заново')
+        start(message)
+
+    else:
+        bot.send_message(message.chat.id, 'Нет такой функции')
+
 
 
 
