@@ -8,8 +8,8 @@ name = None
 age = None
 gender = None
 city = None
-foto = None
 AboutMe = None
+downloaded_file = None
 
 
 @bot.message_handler(commands=['start'])
@@ -56,10 +56,15 @@ def user_city(message):
      bot.register_next_step_handler(message, user_foto)
 
 def user_foto(message):
-    global foto
-    foto = message.text.strip()
+    global downloaded_file
+    photo = message.photo[-1]
+    file_info = bot.get_file(photo.file_id)
 
-    bot.send_message(message.chat.id, 'Расскажите немного про себя')
+    # Загружаем сам файл
+    downloaded_file = bot.download_file(file_info.file_path)
+
+
+    bot.send_message(message.chat.id, 'Отправьте ваше фото')
     bot.register_next_step_handler(message, user_AboutMe)
 
 
@@ -136,8 +141,8 @@ def FReg(message):
             cur = con.cursor()
 
             cur.execute(
-                "INSERT INTO users (name, age, gender, city, foto, AboutMe ) VALUES ('%s','%s','%s','%s','%s','%s')" % (
-                name, age, gender, city, foto, AboutMe))
+                "INSERT INTO users (name, age, gender, city, foto, AboutMe ) VALUES (?,?,?,?,?,?);", (
+                name, age, gender, city, downloaded_file, AboutMe))
             con.commit()
             menuFirst(message)
 
