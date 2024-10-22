@@ -57,14 +57,14 @@ def user_city(message):
 
 def user_foto(message):
     global downloaded_file
-    photo = message.photo[-1]
+    photo = message.document
     file_info = bot.get_file(photo.file_id)
 
     # Загружаем сам файл
     downloaded_file = bot.download_file(file_info.file_path)
 
 
-    bot.send_message(message.chat.id, 'Отправьте ваше фото')
+    bot.send_message(message.chat.id, 'Расскажите немного о себе')
     bot.register_next_step_handler(message, user_AboutMe)
 
 
@@ -169,6 +169,21 @@ def search(message):
     2.Не нравится
     3.Вернутся в главное меню
         ''', reply_markup=markup)
+
+    text = message.text
+
+    if (text == "1"):
+        bot.send_message(message.chat.id, 'Давай попробуем заново')
+
+    elif  (text == "2"):
+        bot.send_message(message.chat.id, 'Давай попробуем заново')
+
+    elif  (text == "3"):
+        bot.send_message(message.chat.id, 'Перенаправляю в главное меню')
+        menuFirst(message)
+
+    else:
+        bot.send_message(message.chat.id, 'Нет такой функции')
 
 
 
