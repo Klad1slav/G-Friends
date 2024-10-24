@@ -10,6 +10,7 @@ gender = None
 city = None
 AboutMe = None
 downloaded_file = None
+user_id = None
 
 
 @bot.message_handler(commands=['start'])
@@ -20,9 +21,13 @@ def start(message):
     cur.execute('CREATE TABLE IF NOT EXISTS users(id INTEGER primary key, name TEXT, age INTEGER, gender INTEGER, city TEXT, foto BLOB, AboutMe TEXT )')
 
     con.commit()
+    user_id = message.from_user.id
 
     bot.send_message(message.chat.id, 'Привет , давай создадим новый аккаунт! Введите ваше имя')
     bot.register_next_step_handler(message, user_name)
+
+
+
 
 def user_name(message):
     global name
@@ -82,6 +87,8 @@ def user_AboutMe(message):
         #con.commit()
 
 def user_FinReg(message):
+        global downloaded_file
+        bot.send_photo(message.chat.id, photo=downloaded_file)
 
         bot.send_message(message.chat.id, name + ', ' + age + ', '+ city + ', ' + AboutMe)
         bot.send_message(message.chat.id, 'Все верно?')
@@ -90,10 +97,10 @@ def user_FinReg(message):
         btn2 = types.KeyboardButton('2')
         markup.add(btn1, btn2)
         bot.send_message(message.chat.id,
-                         '''
-                         1.ДА
-                         2.НЕТ
-                         ''', reply_markup=markup)
+        '''
+            1.ДА
+2.НЕТ
+        ''', reply_markup=markup)
         bot.register_next_step_handler(message, FReg)
 
 
@@ -123,6 +130,10 @@ def menuSec(message):
     if (text == "1"):
         search(message)
     elif (text == "2"):
+        delete_user(user_id)
+
+
+
         bot.send_message(message.chat.id, 'Давай попробуем заново')
         start(message)
     elif (text == "3"):
@@ -152,6 +163,15 @@ def FReg(message):
 
     else:
         bot.send_message(message.chat.id, 'Нет такой функции')
+
+def delete_user(user_id):  # FIX IT
+    with sq.connect('G!Friends.db', check_same_thread=False) as con:
+        cur = con.cursor()
+
+        cur.execute('DELETE FROM users WHERE user_id=?', (user_id,))
+        con.commit()
+
+
 
 
 
