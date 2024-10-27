@@ -10,7 +10,8 @@ gender = None
 city = None
 AboutMe = None
 downloaded_file = None
-user_id = None
+
+
 
 
 @bot.message_handler(commands=['start'])
@@ -18,10 +19,11 @@ def start(message):
     with sq.connect('G!Friends.db', check_same_thread=False) as con:
      cur = con.cursor()
 
-    cur.execute('CREATE TABLE IF NOT EXISTS users(id INTEGER primary key, name TEXT, age INTEGER, gender INTEGER, city TEXT, foto BLOB, AboutMe TEXT )')
+    cur.execute('CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,telegram_id INTEGER, name TEXT, age INTEGER, gender INTEGER, city TEXT, foto BLOB, AboutMe TEXT )')
+    #cur.execute('DROP TABLE users')
 
     con.commit()
-    user_id = message.from_user.id
+
 
     bot.send_message(message.chat.id, 'Привет , давай создадим новый аккаунт! Введите ваше имя')
     bot.register_next_step_handler(message, user_name)
@@ -62,7 +64,7 @@ def user_city(message):
 
 def user_foto(message):
     global downloaded_file
-    photo = message.document
+    photo = message.photo[-1]
     file_info = bot.get_file(photo.file_id)
 
     # Загружаем сам файл
@@ -99,7 +101,7 @@ def user_FinReg(message):
         bot.send_message(message.chat.id,
         '''
             1.ДА
-2.НЕТ
+2.НЕТ(заполнить анкету сначала)
         ''', reply_markup=markup)
         bot.register_next_step_handler(message, FReg)
 
@@ -130,21 +132,37 @@ def menuSec(message):
     if (text == "1"):
         search(message)
     elif (text == "2"):
-        delete_user(user_id)
 
-
+        delete_user(telegram_id)
 
         bot.send_message(message.chat.id, 'Давай попробуем заново')
         start(message)
-    elif (text == "3"):
-        bot.register_next_step_handler(message, start)
+
+    elif (text == "4"):
+
+        bot.send_message(message.chat.id, 'Расскажите немного о себе')
+
+        bot.register_next_step_handler(message, newAboutMe)
+
     else:
         bot.send_message(message.chat.id, 'Нет такой функции')
 
+def newAboutMe(message):
+    global AboutMe
+
+    with sq.connect('G!Friends.db', check_same_thread=False) as con:
+     cur = con.cursor()
+
+    AboutMe = message.text.strip()
+    cur.execute('UPDATE users SET AboutMe = ? WHERE telegram_id = ?', (AboutMe, telegram_id))
+    con.commit()
+
+    user_FinReg(message)
 
 @bot.message_handler(content_types=['FReg'])
 def FReg(message):
-
+    global telegram_id
+    telegram_id = message.from_user.id
     text = message.text
 
     if (text == "1"):
@@ -152,8 +170,8 @@ def FReg(message):
             cur = con.cursor()
 
             cur.execute(
-                "INSERT INTO users (name, age, gender, city, foto, AboutMe ) VALUES (?,?,?,?,?,?);", (
-                name, age, gender, city, downloaded_file, AboutMe))
+                "INSERT INTO users (telegram_id, name, age, gender, city, foto, AboutMe ) VALUES (?,?,?,?,?,?,?);", (
+                telegram_id, name, age, gender, city, downloaded_file, AboutMe))
             con.commit()
             menuFirst(message)
 
@@ -168,7 +186,8 @@ def delete_user(user_id):  # FIX IT
     with sq.connect('G!Friends.db', check_same_thread=False) as con:
         cur = con.cursor()
 
-        cur.execute('DELETE FROM users WHERE user_id=?', (user_id,))
+        cur.execute('DELETE FROM users WHERE telegram_id=?', (telegram_id,))
+
         con.commit()
 
 
