@@ -79,14 +79,7 @@ def user_AboutMe(message):
     global AboutMe
     AboutMe = message.text.strip()
 
-  #  bot.send_message(message.chat.id, 'Отличная анкета получилось')
     user_FinReg(message)
-
-   # with sq.connect('G!Friends.db', check_same_thread=False) as con:
-    #    cur = con.cursor()
-
-        #cur.execute("INSERT INTO users (name, age, gender, city, foto, AboutMe ) VALUES ('%s','%s','%s','%s','%s','%s')" % (name, age, gender, city, foto, AboutMe))
-        #con.commit()
 
 def user_FinReg(message):
         global downloaded_file
@@ -101,7 +94,7 @@ def user_FinReg(message):
         bot.send_message(message.chat.id,
         '''
             1.ДА
-2.НЕТ(заполнить анкету сначала)
+2.НЕТ (заполнить анкету сначала)
         ''', reply_markup=markup)
         bot.register_next_step_handler(message, FReg)
 
@@ -137,7 +130,9 @@ def menuSec(message):
 
         bot.send_message(message.chat.id, 'Давай попробуем заново')
         start(message)
-
+    elif (text == "3"):
+        bot.send_message(message.chat.id, 'Отправь новую фотографию')
+        bot.register_next_step_handler(message, new_user_foto)
     elif (text == "4"):
 
         bot.send_message(message.chat.id, 'Расскажите немного о себе')
@@ -155,6 +150,22 @@ def newAboutMe(message):
 
     AboutMe = message.text.strip()
     cur.execute('UPDATE users SET AboutMe = ? WHERE telegram_id = ?', (AboutMe, telegram_id))
+    con.commit()
+
+    user_FinReg(message)
+
+def new_user_foto(message):
+    global downloaded_file
+    with sq.connect('G!Friends.db', check_same_thread=False) as con:
+     cur = con.cursor()
+
+    photo = message.photo[-1]
+    file_info = bot.get_file(photo.file_id)
+
+    # Загружаем сам файл
+    downloaded_file = bot.download_file(file_info.file_path)
+
+    cur.execute('UPDATE users SET foto = ? WHERE telegram_id = ?', (downloaded_file, telegram_id))
     con.commit()
 
     user_FinReg(message)
@@ -182,7 +193,7 @@ def FReg(message):
     else:
         bot.send_message(message.chat.id, 'Нет такой функции')
 
-def delete_user(user_id):  # FIX IT
+def delete_user(user_id):
     with sq.connect('G!Friends.db', check_same_thread=False) as con:
         cur = con.cursor()
 
