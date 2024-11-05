@@ -4,9 +4,11 @@ import sqlite3 as sq
 from telebot import types
 
 bot = telebot.TeleBot('7155989263:AAFcqabkraoHUo7DnPQsi51Fh0kBPXk6Vrg')
+id = None
 name = None
 age = None
 gender = None
+search = None
 city = None
 AboutMe = None
 downloaded_file = None
@@ -19,7 +21,7 @@ def start(message):
     with sq.connect('G!Friends.db', check_same_thread=False) as con:
      cur = con.cursor()
 
-    cur.execute('CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,telegram_id INTEGER, name TEXT, age INTEGER, gender INTEGER, city TEXT, foto BLOB, AboutMe TEXT )')
+    cur.execute('CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,telegram_id INTEGER, name TEXT, age INTEGER, gender INTEGER,search INTEGER, city TEXT, foto BLOB, AboutMe TEXT )')
     #cur.execute('DROP TABLE users')
 
     con.commit()
@@ -42,17 +44,42 @@ def user_age(message):
     global age
     age = message.text.strip()
 
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton('1')
+    btn2 = types.KeyboardButton('2')
+    markup.add(btn1, btn2)
+
     bot.send_message(message.chat.id, '''Ваш пол?
     1.Мужской
-    2.Женский''')
+    2.Женский''', reply_markup=markup)
+
+
+    bot.register_next_step_handler(message, user_search)
+
+def user_search(message):
+    global gender
+    gender = message.text.strip()
+
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton('1')
+    btn2 = types.KeyboardButton('2')
+    btn3 = types.KeyboardButton('3')
+    markup.add(btn1, btn2, btn3)
+
+    bot.send_message(message.chat.id, '''Кого вы хотите искать?
+    1.Парня
+    2.Девушку
+    3.Неважно''', reply_markup=markup)
+
 
     bot.register_next_step_handler(message, user_gender)
 
 def user_gender(message):
-    global gender
-    gender = message.text.strip()
+    global search
+    search = message.text.strip()
 
-    bot.send_message(message.chat.id, 'В каком городе вы хотите искать?')
+
+    bot.send_message(message.chat.id, 'Введите город')
     bot.register_next_step_handler(message, user_city)
 
 def user_city(message):
@@ -123,7 +150,8 @@ def menuSec(message):
     text = message.text
 
     if (text == "1"):
-        search(message)
+        search_users(message)
+
     elif (text == "2"):
 
         delete_user(telegram_id)
@@ -181,8 +209,8 @@ def FReg(message):
             cur = con.cursor()
 
             cur.execute(
-                "INSERT INTO users (telegram_id, name, age, gender, city, foto, AboutMe ) VALUES (?,?,?,?,?,?,?);", (
-                telegram_id, name, age, gender, city, downloaded_file, AboutMe))
+                "INSERT INTO users (telegram_id, name, age, gender, search, city, foto, AboutMe ) VALUES (?,?,?,?,?,?,?,?);", (
+                telegram_id, name, age, gender, search, city, downloaded_file, AboutMe))
             con.commit()
             menuFirst(message)
 
@@ -207,7 +235,12 @@ def delete_user(user_id):
 
 
 @bot.message_handler(commands=['search'])
-def search(message):
+def search_users(message):
+    with sq.connect('G!Friends.db', check_same_thread=False) as con:
+        cur = con.cursor()
+
+    algorithm(message)
+
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton("1❤️")
     btn2 = types.KeyboardButton("2👎")
@@ -220,33 +253,59 @@ def search(message):
     3.Вернутся в главное меню
         ''', reply_markup=markup)
 
-    text = message.text
+   # bot.register_next_step_handler(message, algorithm)
 
-    if (text == "1"):
-        bot.send_message(message.chat.id, 'Давай попробуем заново')
+@bot.message_handler(content_types=['Algo'])
+def algorithm(message):
+    with sq.connect('G!Friends.db', check_same_thread=False) as con:
+      cur = con.cursor()
+      telegram_id = message.from_user.id
 
-    elif  (text == "2"):
-        bot.send_message(message.chat.id, 'Давай попробуем заново')
+    search = cur.execute('SELECT search FROM users WHERE telegram_id = ?', (telegram_id,)).fetchone()
+    result = str(search[0])
 
-    elif  (text == "3"):
-        bot.send_message(message.chat.id, 'Перенаправляю в главное меню')
-        menuFirst(message)
+
+
+    if (result == '1'):
+
+        id = 18
+
+        cur.execute('SELECT name, age, city, foto FROM users WHERE gender = ?', (1,)).fetchone()
+
+        name, age, city, foto = cur.fetchone()
+
+        bot.send_photo(message.chat.id, foto)
+        bot.send_message(message.chat.id, name + ", " + str(age) + ", " + city)
+
+
+        bot.register_next_step_handler(message, search_users)
 
     else:
-        bot.send_message(message.chat.id, 'Нет такой функции')
+        bot.send_message(message.chat.id, 'Давай попробуем заново')
 
 
 
+      #elif (search == 2):
+       # user =  con.execute('SELECT * FROM users WHERE gender = 2').fetchone()
+        #  return user
+      #else:
+       #   con.execute('SELECT * FROM users WHERE gender = 3').fetchone()
 
+  #  if (text == "1"):
+    #    bot.send_message(message.chat.id, 'Давайте начнем поиск!')
 
+   # elif (text == "2"):
+     #   bot.send_message(message.chat.id, 'Давай попробуем заново')
 
+    #elif (text == "3"):
+     #   bot.send_message(message.chat.id, 'Перенаправляю в главное меню')
+     #   menuFirst(message)
+    #else:
+     #   bot.send_message(message.chat.id, 'Нет такой функции')
 
-   # cur.execute('INSERT INTO users (name, age) VALUES ("%s","%s")' % (name, age))
-   # conn.commit()
-   # cur.close()
-   # conn.close()
-
-
+#def lastUser(message):
+   # telegram_id = message.from_user.id
+# if(telegram_id == telegram_id)
 
 
 bot.polling(none_stop=True)
