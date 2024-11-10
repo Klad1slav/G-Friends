@@ -256,41 +256,64 @@ def search_users(message):
     3.Вернутся в главное меню
         ''', reply_markup=markup)
 
+    bot.register_next_step_handler(message, next_user)
 
-
-
-    bot.register_next_step_handler(message, algorithm)
-
-@bot.message_handler(content_types=['Algo'])
+@bot.message_handler(content_types=['algo'])
 def algorithm(message):
     with sq.connect('G!Friends.db', check_same_thread=False) as con:
       cur = con.cursor()
-      telegram_id = message.from_user.id
+
+    telegram_id = message.from_user.id
+    global current_index
 
 
     search = cur.execute('SELECT search FROM users WHERE telegram_id = ?', (telegram_id,)).fetchone()
     result = str(search[0])
 
 
-
     if (result == '1'):
 
+        cur.execute('SELECT name, age, city, foto FROM users WHERE gender = 1')
 
-        id = 16
-        cur.execute('SELECT name, age, city, foto FROM users WHERE gender = 1').fetchone()
+        data = cur.fetchall()
+        return data
 
-        name, age, city, foto = cur.fetchone()
+    elif (result == '2'):
+        cur.execute('SELECT name, age, city, foto FROM users WHERE gender = 2')
 
-        bot.send_photo(message.chat.id, foto)
-        bot.send_message(message.chat.id, name + ", " + str(age) + ", " + city)
+        data = cur.fetchall()
+        return data
+    elif (result == '3'):
+        cur.execute('SELECT name, age, city, foto FROM users WHERE gender = 3')
 
-
-        bot.register_next_step_handler(message, search_users)
+        data = cur.fetchall()
+        return data
 
     else:
         bot.send_message(message.chat.id, 'Давай попробуем заново')
 
 
+def next_user(message):
+    global current_index
+
+    # Получаем все данные из базы
+    data = algorithm(message)
+
+    # Проверяем, есть ли еще записи
+    if current_index < len(data):
+        user_data = data[current_index]
+        response = ("{name}, {age}, {city}").format(
+            name = user_data[0], age = user_data[1], city = user_data[2])
+        bot.send_photo(message.chat.id, user_data[3])
+        bot.send_message(message.chat.id, response)
+
+        # Увеличиваем индекс для следующего вызова
+        current_index += 1
+    else:
+        bot.send_message(message.chat.id, "Данные закончились.")
+        menuFirst(message)
+
+    bot.register_next_step_handler(message, next_user)
 
 
 
