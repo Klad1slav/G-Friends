@@ -238,8 +238,11 @@ def delete_user(user_id):
 def search_users(message):
     with sq.connect('G!Friends.db', check_same_thread=False) as con:
         cur = con.cursor()
+    global current_index
+    current_index = 0
 
     algorithm(message)
+
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton("1❤️")
@@ -253,13 +256,17 @@ def search_users(message):
     3.Вернутся в главное меню
         ''', reply_markup=markup)
 
-   # bot.register_next_step_handler(message, algorithm)
+
+
+
+    bot.register_next_step_handler(message, algorithm)
 
 @bot.message_handler(content_types=['Algo'])
 def algorithm(message):
     with sq.connect('G!Friends.db', check_same_thread=False) as con:
       cur = con.cursor()
       telegram_id = message.from_user.id
+
 
     search = cur.execute('SELECT search FROM users WHERE telegram_id = ?', (telegram_id,)).fetchone()
     result = str(search[0])
@@ -268,9 +275,9 @@ def algorithm(message):
 
     if (result == '1'):
 
-        id = 18
 
-        cur.execute('SELECT name, age, city, foto FROM users WHERE gender = ?', (1,)).fetchone()
+        id = 16
+        cur.execute('SELECT name, age, city, foto FROM users WHERE gender = 1').fetchone()
 
         name, age, city, foto = cur.fetchone()
 
@@ -282,6 +289,10 @@ def algorithm(message):
 
     else:
         bot.send_message(message.chat.id, 'Давай попробуем заново')
+
+
+
+
 
 
 
