@@ -3,7 +3,7 @@ import telebot
 import sqlite3 as sq
 from telebot import types
 
-bot = telebot.TeleBot('7155989263:AAFcqabkraoHUo7DnPQsi51Fh0kBPXk6Vrg')
+bot = telebot.TeleBot('?')
 id = None
 name = None
 age = None
